@@ -1,0 +1,11 @@
+database:
+  type: sqlite
+  sqlite:
+    path: /Users/benoit/flet_tests/src/library.db
+  mssql:
+    host: localhost
+    port: 1433
+    database: library
+    username: ''
+    password: ''
+    driver: ODBC Driver 18 for SQL Server
