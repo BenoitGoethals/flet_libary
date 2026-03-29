@@ -1,0 +1,148 @@
+import flet as ft
+from datetime import date, timedelta
+from views.base_view import BaseView
+from components.entity_card import StatusBadge
+from components.dialogs import FormDialog
+from services.container import ServiceContainer
+from models.entities import Rental
+
+
+class RentalsView(BaseView):
+    def __init__(self, page: ft.Page, container: ServiceContainer):
+        super().__init__(page, container)
+        self._active_list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
+        self._history_list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
+        self._tab_content = ft.Container(expand=True, padding=10)
+        self._selected_tab = 0
+
+    def _switch_tab(self, index: int):
+        self._selected_tab = index
+        self._tab_content.content = self._active_list if index == 0 else self._history_list
+        self._active_btn.style = self._tab_style(index == 0)
+        self._history_btn.style = self._tab_style(index == 1)
+        self._page.update()
+
+    @staticmethod
+    def _tab_style(selected: bool) -> ft.ButtonStyle:
+        return ft.ButtonStyle(
+            bgcolor=ft.Colors.PRIMARY if selected else ft.Colors.TRANSPARENT,
+            color=ft.Colors.ON_PRIMARY if selected else ft.Colors.ON_SURFACE,
+        )
+
+    def build(self) -> ft.Control:
+        self._active_btn = ft.ElevatedButton("Active Rentals", on_click=lambda e: self._switch_tab(0),
+                                              style=self._tab_style(True))
+        self._history_btn = ft.ElevatedButton("History", on_click=lambda e: self._switch_tab(1),
+                                               style=self._tab_style(False))
+        self.refresh()
+        self._tab_content.content = self._active_list
+        return ft.Column([
+            ft.Row([
+                ft.Text("Rentals", size=28, weight=ft.FontWeight.BOLD),
+                ft.Row([
+                    ft.ElevatedButton("Rent Out Book", icon=ft.Icons.OUTPUT, on_click=lambda e: self._open_rent()),
+                    ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: self.refresh()),
+                ]),
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            ft.Row([self._active_btn, self._history_btn], spacing=5),
+            self._tab_content,
+        ], spacing=15, expand=True)
+
+    def refresh(self) -> None:
+        self._refresh_active()
+        self._refresh_history()
+        self._page.update()
+
+    def _refresh_active(self):
+        rentals = self._services.rentals.get_active()
+        self._active_list.controls = [self._build_active_card(r) for r in rentals]
+
+    def _build_active_card(self, rental: Rental) -> ft.Container:
+        return ft.Container(
+            content=ft.Row([
+                ft.Column([
+                    ft.Text(rental.book.title, weight=ft.FontWeight.BOLD, size=15),
+                    ft.Text(f"Client: {rental.client.name} ({rental.client.phone or 'no phone'})",
+                            size=12, color=ft.Colors.GREY_600),
+                    ft.Row([
+                        ft.Text(f"Rented: {rental.rented_date_short}", size=12),
+                        ft.Text(f"Due: {rental.due_date or 'N/A'}", size=12,
+                                color=ft.Colors.RED if rental.is_overdue else ft.Colors.GREY_600),
+                    ], spacing=15),
+                ], expand=True, spacing=3),
+                ft.Column([
+                    StatusBadge("OVERDUE", ft.Colors.RED) if rental.is_overdue else ft.Container(),
+                    ft.ElevatedButton("Return", icon=ft.Icons.KEYBOARD_RETURN,
+                                      on_click=lambda e, r=rental: self._open_return(r)),
+                ], horizontal_alignment=ft.CrossAxisAlignment.END, spacing=5),
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            padding=15, border_radius=8,
+            border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+            bgcolor=ft.Colors.SURFACE,
+        )
+
+    def _refresh_history(self):
+        rentals = self._services.rentals.get_all()
+        self._history_list.controls = [self._build_history_row(r) for r in rentals]
+
+    def _build_history_row(self, rental: Rental) -> ft.Container:
+        status = "Returned" if rental.returned_at else "Active"
+        return ft.Container(
+            content=ft.Row([
+                ft.Text(rental.book.title, weight=ft.FontWeight.BOLD, expand=True),
+                ft.Text(rental.client.name, width=120),
+                ft.Text(rental.rented_date_short, width=90),
+                ft.Text(rental.returned_date_short or "-", width=90),
+                StatusBadge(status, ft.Colors.GREEN if rental.returned_at else ft.Colors.ORANGE),
+            ]),
+            padding=10, border_radius=6,
+            border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+        )
+
+    def _open_rent(self):
+        available = self._services.books.get_available()
+        clients = self._services.clients.get_all()
+        if not available:
+            self._page.open(ft.SnackBar(ft.Text("No available books to rent"), open=True))
+            return
+        if not clients:
+            self._page.open(ft.SnackBar(ft.Text("No clients registered"), open=True))
+            return
+
+        book_dd = ft.Dropdown(
+            label="Book", width=400,
+            options=[ft.dropdown.Option(key=str(b.id), text=f"{b.title} - {b.author}") for b in available],
+        )
+        client_dd = ft.Dropdown(
+            label="Client", width=400,
+            options=[ft.dropdown.Option(key=str(c.id), text=c.name) for c in clients],
+        )
+        due_f = ft.TextField(label="Due date (YYYY-MM-DD)",
+                             value=(date.today() + timedelta(days=14)).isoformat(), width=400)
+
+        def save():
+            if not book_dd.value or not client_dd.value:
+                return False
+            self._services.rentals.rent_book(int(book_dd.value), int(client_dd.value), due_f.value)
+            self.refresh()
+            return True
+
+        FormDialog(self._page, "Rent Out Book", [book_dd, client_dd, due_f], save).show()
+
+    def _open_return(self, rental: Rental):
+        storages = self._services.storages.get_all()
+        storage_dd = ft.Dropdown(
+            label="Return to storage", width=400,
+            options=[ft.dropdown.Option(key=str(s.id), text=s.name) for s in storages],
+        )
+
+        def save():
+            if not storage_dd.value:
+                return False
+            self._services.rentals.return_book(rental.id, int(storage_dd.value))
+            self.refresh()
+            return True
+
+        FormDialog(self._page, f"Return: {rental.book.title}", [
+            ft.Text(f"Client: {rental.client.name}"), storage_dd
+        ], save).show()
