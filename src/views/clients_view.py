@@ -15,8 +15,9 @@ class ClientsView(BaseView):
     def __init__(self, page: ft.Page, container: ServiceContainer):
         super().__init__(page, container)
         self._search = ft.TextField(label="Search clients...", expand=True,
-                                    on_submit=lambda e: self.refresh())
+                                    on_submit=lambda e: asyncio.ensure_future(self.refresh()))
         self._list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
+        self._file_picker = ft.FilePicker()
 
     async def build(self) -> ft.Control:
         """Build the clients view layout.
@@ -24,11 +25,12 @@ class ClientsView(BaseView):
         Returns:
             A Column containing the search bar, add button, and client list.
         """
+        self._page.services.append(self._file_picker)
         await self.refresh()
         return ft.Column([
             ft.Row([
                 ft.Text("Clients", size=28, weight=ft.FontWeight.BOLD),
-                ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: self.refresh())], expand=True),
+                ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: asyncio.ensure_future(self.refresh()))], expand=True),
                 ft.Button("Add Client", icon=ft.Icons.PERSON_ADD, on_click=lambda e: asyncio.ensure_future(self._open_form())),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             self._list,
@@ -43,17 +45,27 @@ class ClientsView(BaseView):
     def _build_card(self, client: Client) -> EntityCard:
         """Build a card widget for a single client."""
         n = client.active_rental_count
-        content = ft.Column([
-            ft.Text(client.name, weight=ft.FontWeight.BOLD, size=16),
-            ft.Row([
-                ft.Text(client.email or "", size=12, color=ft.Colors.GREY_500),
-                ft.Text(client.phone or "", size=12, color=ft.Colors.GREY_500),
-            ], spacing=15),
-            ft.Row([
-                ft.Text(client.address or "", size=12, color=ft.Colors.GREY_500) if client.address else ft.Container(),
-                StatusBadge(f"{n} active rental{'s' if n != 1 else ''}", ft.Colors.TEAL if n else ft.Colors.GREY_400),
-            ], spacing=10),
-        ], expand=True, spacing=3)
+
+        # Create photo display
+        photo = None
+        if client.photo_path:
+            photo = ft.Image(src=client.photo_path, width=60, height=60, fit=ft.BoxFit.COVER, border_radius=30)
+
+        content = ft.Row([
+            photo if photo else ft.Container(width=60, height=60, bgcolor=ft.Colors.GREY_300, border_radius=30,
+                                            content=ft.Icon(ft.Icons.PERSON, size=30, color=ft.Colors.GREY_600)),
+            ft.Column([
+                ft.Text(client.name, weight=ft.FontWeight.BOLD, size=16),
+                ft.Row([
+                    ft.Text(client.email or "", size=12, color=ft.Colors.GREY_500),
+                    ft.Text(client.phone or "", size=12, color=ft.Colors.GREY_500),
+                ], spacing=15),
+                ft.Row([
+                    ft.Text(client.address or "", size=12, color=ft.Colors.GREY_500) if client.address else ft.Container(),
+                    StatusBadge(f"{n} active rental{'s' if n != 1 else ''}", ft.Colors.TEAL if n else ft.Colors.GREY_400),
+                ], spacing=10),
+            ], expand=True, spacing=3),
+        ], spacing=10)
 
         return EntityCard(
             content=content,
@@ -68,20 +80,41 @@ class ClientsView(BaseView):
         phone_f = ft.TextField(label="Phone", value=client.phone if client else "")
         address_f = ft.TextField(label="Address", value=client.address if client else "")
 
+        # Photo picker
+        photo_path = client.photo_path if client else ""
+        photo_display = ft.Text(photo_path or "No photo selected", size=12, color=ft.Colors.GREY_600)
+
+        async def pick_photo(_):
+            nonlocal photo_path
+            files = await self._file_picker.pick_files(
+                allow_multiple=False,
+                allowed_extensions=["jpg", "jpeg", "png", "gif"]
+            )
+            if files:
+                photo_path = files[0].path
+                photo_display.value = photo_path
+                self._page.update()
+
+        photo_row = ft.Row([
+            ft.Button("Choose Photo", icon=ft.Icons.IMAGE,
+                     on_click=lambda e: asyncio.ensure_future(pick_photo(e))),
+            photo_display,
+        ], spacing=10)
+
         async def save():
             if not name_f.value.strip():
                 name_f.error_text = "Required"
                 self._page.update()
                 return False
             if client:
-                await self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, address_f.value)
+                await self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, address_f.value, photo_path)
             else:
-                await self._services.clients.create(name_f.value, email_f.value, phone_f.value, address_f.value)
+                await self._services.clients.create(name_f.value, email_f.value, phone_f.value, address_f.value, photo_path)
             await self.refresh()
             return True
 
         FormDialog(self._page, "Edit Client" if client else "Add Client",
-                   [name_f, email_f, phone_f, address_f], save).show()
+                   [name_f, email_f, phone_f, address_f, photo_row], save).show()
 
     async def _confirm_delete(self, client: Client):
         """Open the delete confirmation dialog."""

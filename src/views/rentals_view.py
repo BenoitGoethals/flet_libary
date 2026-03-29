@@ -54,7 +54,7 @@ class RentalsView(BaseView):
                 ft.Row([
                     ft.Button("Rent Out Book", icon=ft.Icons.OUTPUT,
                                       on_click=lambda e: asyncio.ensure_future(self._open_rent())),
-                    ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: self.refresh()),
+                    ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: asyncio.ensure_future(self.refresh())),
                 ]),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ft.Row([self._active_btn, self._history_btn], spacing=5),

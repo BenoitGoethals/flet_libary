@@ -85,6 +85,7 @@ class BookRepository(BaseRepository[Book]):
                 book.author = entity.author
                 book.isbn = entity.isbn
                 book.genre = entity.genre
+                book.photo_path = entity.photo_path
                 book.storage_id = entity.storage_id
                 await session.commit()
 

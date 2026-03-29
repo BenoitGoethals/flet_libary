@@ -61,6 +61,7 @@ class ClientRepository(BaseRepository[Client]):
                 client.email = entity.email
                 client.phone = entity.phone
                 client.address = entity.address
+                client.photo_path = entity.photo_path
                 await session.commit()
 
     async def delete(self, entity_id: int) -> None:

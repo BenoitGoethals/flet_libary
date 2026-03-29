@@ -17,6 +17,7 @@ class BooksView(BaseView):
         self._search = ft.TextField(label="Search books...", expand=True,
                                     on_submit=lambda e: asyncio.ensure_future(self.refresh()))
         self._list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
+        self._file_picker = ft.FilePicker()
 
     async def build(self) -> ft.Control:
         """Build the books view layout.
@@ -24,11 +25,12 @@ class BooksView(BaseView):
         Returns:
             A Column containing the search bar, add button, and book list.
         """
+        self._page.services.append(self._file_picker)
         await self.refresh()
         return ft.Column([
             ft.Row([
                 ft.Text("Books", size=28, weight=ft.FontWeight.BOLD),
-                ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: self.refresh())], expand=True),
+                ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: asyncio.ensure_future(self.refresh()))], expand=True),
                 ft.Button("Add Book", icon=ft.Icons.ADD, on_click=lambda e: asyncio.ensure_future(self._open_form())),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             self._list,
@@ -43,16 +45,26 @@ class BooksView(BaseView):
     def _build_card(self, book: Book) -> EntityCard:
         """Build a card widget for a single book."""
         status_color = ft.Colors.GREEN if book.is_available else ft.Colors.ORANGE
-        content = ft.Column([
-            ft.Text(book.title, weight=ft.FontWeight.BOLD, size=16),
-            ft.Text(f"by {book.author}" if book.author else "Unknown author", size=13, color=ft.Colors.GREY_500),
-            ft.Row([
-                StatusBadge(book.status.upper(), status_color),
-                ft.Text(f"ISBN: {book.isbn}" if book.isbn else "", size=11, color=ft.Colors.GREY_500),
-                ft.Text(f"Genre: {book.genre}" if book.genre else "", size=11, color=ft.Colors.GREY_500),
-                ft.Text(book.location_display, size=12, color=ft.Colors.GREY_600),
-            ], spacing=10),
-        ], expand=True, spacing=3)
+
+        # Create photo display
+        photo = None
+        if book.photo_path:
+            photo = ft.Image(src=book.photo_path, width=60, height=80, fit=ft.BoxFit.COVER, border_radius=4)
+
+        content = ft.Row([
+            photo if photo else ft.Container(width=60, height=80, bgcolor=ft.Colors.GREY_300, border_radius=4,
+                                            content=ft.Icon(ft.Icons.BOOK, size=30, color=ft.Colors.GREY_600)),
+            ft.Column([
+                ft.Text(book.title, weight=ft.FontWeight.BOLD, size=16),
+                ft.Text(f"by {book.author}" if book.author else "Unknown author", size=13, color=ft.Colors.GREY_500),
+                ft.Row([
+                    StatusBadge(book.status.upper(), status_color),
+                    ft.Text(f"ISBN: {book.isbn}" if book.isbn else "", size=11, color=ft.Colors.GREY_500),
+                    ft.Text(f"Genre: {book.genre}" if book.genre else "", size=11, color=ft.Colors.GREY_500),
+                    ft.Text(book.location_display, size=12, color=ft.Colors.GREY_600),
+                ], spacing=10),
+            ], expand=True, spacing=3),
+        ], spacing=10)
 
         return EntityCard(
             content=content,
@@ -73,6 +85,27 @@ class BooksView(BaseView):
         storage_f = ft.Dropdown(label="Storage", options=options,
                                 value=str(book.storage_id) if book and book.storage_id else "")
 
+        # Photo picker
+        photo_path = book.photo_path if book else ""
+        photo_display = ft.Text(photo_path or "No photo selected", size=12, color=ft.Colors.GREY_600)
+
+        async def pick_photo(_):
+            nonlocal photo_path
+            files = await self._file_picker.pick_files(
+                allow_multiple=False,
+                allowed_extensions=["jpg", "jpeg", "png", "gif"]
+            )
+            if files:
+                photo_path = files[0].path
+                photo_display.value = photo_path
+                self._page.update()
+
+        photo_row = ft.Row([
+            ft.Button("Choose Photo", icon=ft.Icons.IMAGE,
+                     on_click=lambda e: asyncio.ensure_future(pick_photo(e))),
+            photo_display,
+        ], spacing=10)
+
         async def save():
             if not title_f.value.strip():
                 title_f.error_text = "Required"
@@ -80,14 +113,14 @@ class BooksView(BaseView):
                 return False
             sid = int(storage_f.value) if storage_f.value else None
             if book:
-                await self._services.books.update(book.id, title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
+                await self._services.books.update(book.id, title_f.value, author_f.value, isbn_f.value, genre_f.value, sid, photo_path)
             else:
-                await self._services.books.create(title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
+                await self._services.books.create(title_f.value, author_f.value, isbn_f.value, genre_f.value, sid, photo_path)
             await self.refresh()
             return True
 
         FormDialog(self._page, "Edit Book" if book else "Add Book",
-                   [title_f, author_f, isbn_f, genre_f, storage_f], save).show()
+                   [title_f, author_f, isbn_f, genre_f, storage_f, photo_row], save).show()
 
     async def _confirm_delete(self, book: Book):
         """Open the delete confirmation dialog."""

@@ -37,7 +37,7 @@ class BookService:
         """
         return await self._book_repo.get_available()
 
-    async def create(self, title: str, author: str = "", isbn: str = "", genre: str = "", storage_id: int | None = None) -> None:
+    async def create(self, title: str, author: str = "", isbn: str = "", genre: str = "", storage_id: int | None = None, photo_path: str = "") -> None:
         """Create a new book in the library catalog.
 
         Args:
@@ -46,10 +46,11 @@ class BookService:
             isbn: International Standard Book Number.
             genre: Genre or category.
             storage_id: Optional storage location ID.
+            photo_path: Path to the book's photo.
         """
-        await self._book_repo.add(Book(title=title, author=author, isbn=isbn, genre=genre, storage_id=storage_id))
+        await self._book_repo.add(Book(title=title, author=author, isbn=isbn, genre=genre, storage_id=storage_id, photo_path=photo_path))
 
-    async def update(self, book_id: int, title: str, author: str, isbn: str, genre: str, storage_id: int | None) -> None:
+    async def update(self, book_id: int, title: str, author: str, isbn: str, genre: str, storage_id: int | None, photo_path: str = "") -> None:
         """Update an existing book's metadata.
 
         Args:
@@ -59,8 +60,9 @@ class BookService:
             isbn: Updated ISBN.
             genre: Updated genre.
             storage_id: Updated storage location ID, or None.
+            photo_path: Path to the book's photo.
         """
-        book = Book(title=title, author=author, isbn=isbn, genre=genre, storage_id=storage_id)
+        book = Book(title=title, author=author, isbn=isbn, genre=genre, storage_id=storage_id, photo_path=photo_path)
         book.id = book_id
         await self._book_repo.update(book)
 

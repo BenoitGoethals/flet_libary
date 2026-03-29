@@ -37,7 +37,7 @@ class ClientService:
         """
         return await self._client_repo.get_all()
 
-    async def create(self, name: str, email: str = "", phone: str = "", address: str = "") -> None:
+    async def create(self, name: str, email: str = "", phone: str = "", address: str = "", photo_path: str = "") -> None:
         """Register a new client.
 
         Args:
@@ -45,10 +45,11 @@ class ClientService:
             email: Email address.
             phone: Phone number.
             address: Physical address.
+            photo_path: Path to the client's photo.
         """
-        await self._client_repo.add(Client(name=name, email=email, phone=phone, address=address))
+        await self._client_repo.add(Client(name=name, email=email, phone=phone, address=address, photo_path=photo_path))
 
-    async def update(self, client_id: int, name: str, email: str, phone: str, address: str) -> None:
+    async def update(self, client_id: int, name: str, email: str, phone: str, address: str, photo_path: str = "") -> None:
         """Update an existing client's information.
 
         Args:
@@ -57,8 +58,9 @@ class ClientService:
             email: Updated email.
             phone: Updated phone.
             address: Updated address.
+            photo_path: Path to the client's photo.
         """
-        client = Client(name=name, email=email, phone=phone, address=address)
+        client = Client(name=name, email=email, phone=phone, address=address, photo_path=photo_path)
         client.id = client_id
         await self._client_repo.update(client)
 

@@ -1,5 +1,6 @@
 """Dashboard view displaying library statistics and active rentals."""
 
+import asyncio
 import flet as ft
 from views.base_view import BaseView
 from components.stat_card import StatCard
@@ -41,7 +42,7 @@ class DashboardView(BaseView):
             [
                 ft.Row(
                     [ft.Text("Dashboard", size=28, weight=ft.FontWeight.BOLD),
-                     ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: self.refresh())],
+                     ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: asyncio.ensure_future(self.refresh()))],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
                 self._cards_row1,

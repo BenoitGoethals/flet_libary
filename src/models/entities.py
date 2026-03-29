@@ -60,6 +60,7 @@ class Book(Base):
     author: Mapped[Optional[str]] = mapped_column(String, default="")
     isbn: Mapped[Optional[str]] = mapped_column(String, default="")
     genre: Mapped[Optional[str]] = mapped_column(String, default="")
+    photo_path: Mapped[Optional[str]] = mapped_column(String, default="")
     storage_id: Mapped[Optional[int]] = mapped_column(ForeignKey("storages.id", ondelete="SET NULL"))
     status: Mapped[str] = mapped_column(String, default="available")
     created_at: Mapped[Optional[str]] = mapped_column(String, server_default=func.now())
@@ -132,6 +133,7 @@ class Client(Base):
     email: Mapped[Optional[str]] = mapped_column(String, default="")
     phone: Mapped[Optional[str]] = mapped_column(String, default="")
     address: Mapped[Optional[str]] = mapped_column(String, default="")
+    photo_path: Mapped[Optional[str]] = mapped_column(String, default="")
     created_at: Mapped[Optional[str]] = mapped_column(String, server_default=func.now())
 
     rentals: Mapped[List["Rental"]] = relationship(back_populates="client")
