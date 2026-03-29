@@ -1,5 +1,6 @@
 """Async storages view for managing storage locations."""
 
+import asyncio
 import flet as ft
 from views.base_view import BaseView
 from components.entity_card import EntityCard
@@ -25,8 +26,8 @@ class StoragesView(BaseView):
         return ft.Column([
             ft.Row([
                 ft.Text("Storages", size=28, weight=ft.FontWeight.BOLD),
-                ft.ElevatedButton("Add Storage", icon=ft.Icons.ADD_BUSINESS,
-                                  on_click=lambda e: self._open_form()),
+                ft.Button("Add Storage", icon=ft.Icons.ADD_BUSINESS,
+                                  on_click=lambda e: asyncio.ensure_future(self._open_form())),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             self._list,
         ], spacing=15, expand=True)
@@ -54,8 +55,8 @@ class StoragesView(BaseView):
 
         return EntityCard(
             content=content,
-            on_edit=lambda e, s=storage: self._open_form(s),
-            on_delete=lambda e, s=storage: self._confirm_delete(s),
+            on_edit=lambda e, s=storage: asyncio.ensure_future(self._open_form(s)),
+            on_delete=lambda e, s=storage: asyncio.ensure_future(self._confirm_delete(s)),
         )
 
     async def _open_form(self, storage: StorageWithCount | None = None):

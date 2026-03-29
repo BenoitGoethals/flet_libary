@@ -29,6 +29,6 @@ class StatCard(ft.Container):
             padding=20,
             border_radius=12,
             bgcolor=ft.Colors.SURFACE,
-            border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+            border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
             expand=True,
         )

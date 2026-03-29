@@ -1,7 +1,7 @@
 database:
   type: sqlite
   sqlite:
-    path: /Users/benoit/flet_tests/src/library.db
+    path: ./library.db
   mssql:
     host: localhost
     port: 1433

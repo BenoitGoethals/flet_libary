@@ -1,5 +1,6 @@
 """Async clients view for managing library clients."""
 
+import asyncio
 import flet as ft
 from views.base_view import BaseView
 from components.entity_card import EntityCard, StatusBadge
@@ -28,7 +29,7 @@ class ClientsView(BaseView):
             ft.Row([
                 ft.Text("Clients", size=28, weight=ft.FontWeight.BOLD),
                 ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: self.refresh())], expand=True),
-                ft.ElevatedButton("Add Client", icon=ft.Icons.PERSON_ADD, on_click=lambda e: self._open_form()),
+                ft.Button("Add Client", icon=ft.Icons.PERSON_ADD, on_click=lambda e: asyncio.ensure_future(self._open_form())),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             self._list,
         ], spacing=15, expand=True)
@@ -56,8 +57,8 @@ class ClientsView(BaseView):
 
         return EntityCard(
             content=content,
-            on_edit=lambda e, c=client: self._open_form(c),
-            on_delete=lambda e, c=client: self._confirm_delete(c),
+            on_edit=lambda e, c=client: asyncio.ensure_future(self._open_form(c)),
+            on_delete=lambda e, c=client: asyncio.ensure_future(self._confirm_delete(c)),
         )
 
     async def _open_form(self, client: Client | None = None):

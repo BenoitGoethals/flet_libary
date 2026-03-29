@@ -1,5 +1,6 @@
 """Async books view for managing the book catalog."""
 
+import asyncio
 import flet as ft
 from views.base_view import BaseView
 from components.entity_card import EntityCard, StatusBadge
@@ -14,7 +15,7 @@ class BooksView(BaseView):
     def __init__(self, page: ft.Page, container: ServiceContainer):
         super().__init__(page, container)
         self._search = ft.TextField(label="Search books...", expand=True,
-                                    on_submit=lambda e: self.refresh())
+                                    on_submit=lambda e: asyncio.ensure_future(self.refresh()))
         self._list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
 
     async def build(self) -> ft.Control:
@@ -28,7 +29,7 @@ class BooksView(BaseView):
             ft.Row([
                 ft.Text("Books", size=28, weight=ft.FontWeight.BOLD),
                 ft.Row([self._search, ft.IconButton(ft.Icons.SEARCH, on_click=lambda e: self.refresh())], expand=True),
-                ft.ElevatedButton("Add Book", icon=ft.Icons.ADD, on_click=lambda e: self._open_form()),
+                ft.Button("Add Book", icon=ft.Icons.ADD, on_click=lambda e: asyncio.ensure_future(self._open_form())),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             self._list,
         ], spacing=15, expand=True)
@@ -55,8 +56,8 @@ class BooksView(BaseView):
 
         return EntityCard(
             content=content,
-            on_edit=lambda e, b=book: self._open_form(b),
-            on_delete=lambda e, b=book: self._confirm_delete(b),
+            on_edit=lambda e, b=book: asyncio.ensure_future(self._open_form(b)),
+            on_delete=lambda e, b=book: asyncio.ensure_future(self._confirm_delete(b)),
         )
 
     async def _open_form(self, book: Book | None = None):

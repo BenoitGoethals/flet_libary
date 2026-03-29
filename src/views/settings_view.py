@@ -53,7 +53,7 @@ class SettingsView(BaseView):
             value=self._services.settings.build_url(settings), expand=True,
         )
 
-        save_btn = ft.ElevatedButton(
+        save_btn = ft.Button(
             "Save Settings", icon=ft.Icons.SAVE,
             on_click=self._save,
             style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE, color=ft.Colors.WHITE),

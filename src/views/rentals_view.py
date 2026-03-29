@@ -1,5 +1,6 @@
 """Async rentals view for managing book rentals and returns."""
 
+import asyncio
 import flet as ft
 from datetime import date, timedelta
 from views.base_view import BaseView
@@ -41,9 +42,9 @@ class RentalsView(BaseView):
         Returns:
             A Column containing tab buttons, rental list, and action buttons.
         """
-        self._active_btn = ft.ElevatedButton("Active Rentals", on_click=lambda e: self._switch_tab(0),
+        self._active_btn = ft.Button("Active Rentals", on_click=lambda e: self._switch_tab(0),
                                               style=self._tab_style(True))
-        self._history_btn = ft.ElevatedButton("History", on_click=lambda e: self._switch_tab(1),
+        self._history_btn = ft.Button("History", on_click=lambda e: self._switch_tab(1),
                                                style=self._tab_style(False))
         await self.refresh()
         self._tab_content.content = self._active_list
@@ -51,8 +52,8 @@ class RentalsView(BaseView):
             ft.Row([
                 ft.Text("Rentals", size=28, weight=ft.FontWeight.BOLD),
                 ft.Row([
-                    ft.ElevatedButton("Rent Out Book", icon=ft.Icons.OUTPUT,
-                                      on_click=lambda e: self._open_rent()),
+                    ft.Button("Rent Out Book", icon=ft.Icons.OUTPUT,
+                                      on_click=lambda e: asyncio.ensure_future(self._open_rent())),
                     ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: self.refresh()),
                 ]),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
@@ -87,12 +88,12 @@ class RentalsView(BaseView):
                 ], expand=True, spacing=3),
                 ft.Column([
                     StatusBadge("OVERDUE", ft.Colors.RED) if rental.is_overdue else ft.Container(),
-                    ft.ElevatedButton("Return", icon=ft.Icons.KEYBOARD_RETURN,
-                                      on_click=lambda e, r=rental: self._open_return(r)),
+                    ft.Button("Return", icon=ft.Icons.KEYBOARD_RETURN,
+                                      on_click=lambda e, r=rental: asyncio.ensure_future(self._open_return(r))),
                 ], horizontal_alignment=ft.CrossAxisAlignment.END, spacing=5),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             padding=15, border_radius=8,
-            border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+            border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
             bgcolor=ft.Colors.SURFACE,
         )
 
@@ -113,7 +114,7 @@ class RentalsView(BaseView):
                 StatusBadge(status, ft.Colors.GREEN if rental.returned_at else ft.Colors.ORANGE),
             ]),
             padding=10, border_radius=6,
-            border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+            border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
         )
 
     async def _open_rent(self):

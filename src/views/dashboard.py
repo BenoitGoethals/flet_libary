@@ -51,7 +51,7 @@ class DashboardView(BaseView):
                 ft.Container(
                     content=self._rentals_table,
                     border_radius=8,
-                    border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
+                    border=ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
                     padding=10,
                 ),
             ],

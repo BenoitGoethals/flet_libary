@@ -25,7 +25,7 @@ class FormDialog:
             content=ft.Column(fields, tight=True, spacing=10, width=400),
             actions=[
                 ft.TextButton("Cancel", on_click=self._close),
-                ft.ElevatedButton("Save", on_click=self._save),
+                ft.Button("Save", on_click=self._save),
             ],
         )
 
@@ -77,7 +77,7 @@ class ConfirmDialog:
             content=ft.Text(message),
             actions=[
                 ft.TextButton("Cancel", on_click=lambda e: self.close()),
-                ft.ElevatedButton("Delete", on_click=lambda e: asyncio.ensure_future(self._confirm()),
+                ft.Button("Delete", on_click=lambda e: asyncio.ensure_future(self._confirm()),
                                   color=ft.Colors.RED),
             ],
         )

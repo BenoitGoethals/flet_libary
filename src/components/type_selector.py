@@ -20,12 +20,12 @@ class TypeSelector(ft.Row):
                  on_change: Callable[[str], Awaitable[None]]):
         self._value = value
         self._on_change = on_change
-        self._buttons: dict[str, ft.ElevatedButton] = {}
+        self._buttons: dict[str, ft.Button] = {}
         controls = [ft.Text("Database type:", weight=ft.FontWeight.BOLD)]
         for key, label in options:
             async def _on_click(e, k=key):
                 await self._select(k)
-            btn = ft.ElevatedButton(label, on_click=_on_click)
+            btn = ft.Button(label, on_click=_on_click)
             self._buttons[key] = btn
             controls.append(btn)
         super().__init__(controls=controls, spacing=10)
