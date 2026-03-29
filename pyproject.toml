@@ -8,8 +8,11 @@ authors = [
     { name = "Flet developer", email = "you@example.com" }
 ]
 dependencies = [
+    "aiosqlite>=0.22.1",
     "flet>=0.83.0",
+    "greenlet>=3.3.2",
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
     "sqlalchemy>=2.0.48",
 ]
 

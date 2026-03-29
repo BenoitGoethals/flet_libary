@@ -1,3 +1,5 @@
+"""Async clients view for managing library clients."""
+
 import flet as ft
 from views.base_view import BaseView
 from components.entity_card import EntityCard, StatusBadge
@@ -7,13 +9,21 @@ from models.entities import Client
 
 
 class ClientsView(BaseView):
+    """View for searching, adding, editing, and deleting clients."""
+
     def __init__(self, page: ft.Page, container: ServiceContainer):
         super().__init__(page, container)
-        self._search = ft.TextField(label="Search clients...", expand=True, on_submit=lambda e: self.refresh())
+        self._search = ft.TextField(label="Search clients...", expand=True,
+                                    on_submit=lambda e: self.refresh())
         self._list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
 
-    def build(self) -> ft.Control:
-        self.refresh()
+    async def build(self) -> ft.Control:
+        """Build the clients view layout.
+
+        Returns:
+            A Column containing the search bar, add button, and client list.
+        """
+        await self.refresh()
         return ft.Column([
             ft.Row([
                 ft.Text("Clients", size=28, weight=ft.FontWeight.BOLD),
@@ -23,12 +33,14 @@ class ClientsView(BaseView):
             self._list,
         ], spacing=15, expand=True)
 
-    def refresh(self) -> None:
-        clients = self._services.clients.search(self._search.value or "")
+    async def refresh(self, e=None) -> None:
+        """Refresh the client list from the database."""
+        clients = await self._services.clients.search(self._search.value or "")
         self._list.controls = [self._build_card(c) for c in clients]
         self._page.update()
 
     def _build_card(self, client: Client) -> EntityCard:
+        """Build a card widget for a single client."""
         n = client.active_rental_count
         content = ft.Column([
             ft.Text(client.name, weight=ft.FontWeight.BOLD, size=16),
@@ -48,30 +60,32 @@ class ClientsView(BaseView):
             on_delete=lambda e, c=client: self._confirm_delete(c),
         )
 
-    def _open_form(self, client: Client | None = None):
+    async def _open_form(self, client: Client | None = None):
+        """Open the add/edit client dialog."""
         name_f = ft.TextField(label="Name", value=client.name if client else "")
         email_f = ft.TextField(label="Email", value=client.email if client else "")
         phone_f = ft.TextField(label="Phone", value=client.phone if client else "")
         address_f = ft.TextField(label="Address", value=client.address if client else "")
 
-        def save():
+        async def save():
             if not name_f.value.strip():
                 name_f.error_text = "Required"
                 self._page.update()
                 return False
             if client:
-                self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, address_f.value)
+                await self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, address_f.value)
             else:
-                self._services.clients.create(name_f.value, email_f.value, phone_f.value, address_f.value)
-            self.refresh()
+                await self._services.clients.create(name_f.value, email_f.value, phone_f.value, address_f.value)
+            await self.refresh()
             return True
 
         FormDialog(self._page, "Edit Client" if client else "Add Client",
                    [name_f, email_f, phone_f, address_f], save).show()
 
-    def _confirm_delete(self, client: Client):
-        def do_delete():
-            self._services.clients.delete(client.id)
-            self.refresh()
+    async def _confirm_delete(self, client: Client):
+        """Open the delete confirmation dialog."""
+        async def do_delete():
+            await self._services.clients.delete(client.id)
+            await self.refresh()
 
         ConfirmDialog(self._page, "Delete Client", f'Delete "{client.name}"?', do_delete).show()

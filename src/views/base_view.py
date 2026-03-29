@@ -1,4 +1,4 @@
-"""Abstract base view defining the interface for all application views."""
+"""Abstract base view defining the async interface for all application views."""
 
 import flet as ft
 from abc import ABC, abstractmethod
@@ -10,6 +10,7 @@ class BaseView(ABC):
 
     Provides access to the Flet page and the service container.
     """
+
     def __init__(self, page: ft.Page, container: ServiceContainer):
         """Initialize the base view.
 
@@ -21,7 +22,7 @@ class BaseView(ABC):
         self._services = container
 
     @abstractmethod
-    def build(self) -> ft.Control:
+    async def build(self) -> ft.Control:
         """Build and return the view's root Flet control.
 
         Returns:
@@ -30,6 +31,6 @@ class BaseView(ABC):
         ...
 
     @abstractmethod
-    def refresh(self) -> None:
+    async def refresh(self) -> None:
         """Refresh the view's data and update the display."""
         ...

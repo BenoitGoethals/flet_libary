@@ -1,3 +1,5 @@
+"""Async rentals view for managing book rentals and returns."""
+
 import flet as ft
 from datetime import date, timedelta
 from views.base_view import BaseView
@@ -8,6 +10,8 @@ from models.entities import Rental
 
 
 class RentalsView(BaseView):
+    """View for renting out books, returning them, and viewing history."""
+
     def __init__(self, page: ft.Page, container: ServiceContainer):
         super().__init__(page, container)
         self._active_list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
@@ -16,6 +20,7 @@ class RentalsView(BaseView):
         self._selected_tab = 0
 
     def _switch_tab(self, index: int):
+        """Switch between Active Rentals and History tabs."""
         self._selected_tab = index
         self._tab_content.content = self._active_list if index == 0 else self._history_list
         self._active_btn.style = self._tab_style(index == 0)
@@ -24,23 +29,30 @@ class RentalsView(BaseView):
 
     @staticmethod
     def _tab_style(selected: bool) -> ft.ButtonStyle:
+        """Get button style for tab buttons."""
         return ft.ButtonStyle(
             bgcolor=ft.Colors.PRIMARY if selected else ft.Colors.TRANSPARENT,
             color=ft.Colors.ON_PRIMARY if selected else ft.Colors.ON_SURFACE,
         )
 
-    def build(self) -> ft.Control:
+    async def build(self) -> ft.Control:
+        """Build the rentals view layout.
+
+        Returns:
+            A Column containing tab buttons, rental list, and action buttons.
+        """
         self._active_btn = ft.ElevatedButton("Active Rentals", on_click=lambda e: self._switch_tab(0),
                                               style=self._tab_style(True))
         self._history_btn = ft.ElevatedButton("History", on_click=lambda e: self._switch_tab(1),
                                                style=self._tab_style(False))
-        self.refresh()
+        await self.refresh()
         self._tab_content.content = self._active_list
         return ft.Column([
             ft.Row([
                 ft.Text("Rentals", size=28, weight=ft.FontWeight.BOLD),
                 ft.Row([
-                    ft.ElevatedButton("Rent Out Book", icon=ft.Icons.OUTPUT, on_click=lambda e: self._open_rent()),
+                    ft.ElevatedButton("Rent Out Book", icon=ft.Icons.OUTPUT,
+                                      on_click=lambda e: self._open_rent()),
                     ft.IconButton(ft.Icons.REFRESH, on_click=lambda e: self.refresh()),
                 ]),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
@@ -48,16 +60,19 @@ class RentalsView(BaseView):
             self._tab_content,
         ], spacing=15, expand=True)
 
-    def refresh(self) -> None:
-        self._refresh_active()
-        self._refresh_history()
+    async def refresh(self, e=None) -> None:
+        """Refresh both active and history rental lists."""
+        await self._refresh_active()
+        await self._refresh_history()
         self._page.update()
 
-    def _refresh_active(self):
-        rentals = self._services.rentals.get_active()
+    async def _refresh_active(self):
+        """Refresh the active rentals list."""
+        rentals = await self._services.rentals.get_active()
         self._active_list.controls = [self._build_active_card(r) for r in rentals]
 
     def _build_active_card(self, rental: Rental) -> ft.Container:
+        """Build a card widget for an active rental."""
         return ft.Container(
             content=ft.Row([
                 ft.Column([
@@ -81,11 +96,13 @@ class RentalsView(BaseView):
             bgcolor=ft.Colors.SURFACE,
         )
 
-    def _refresh_history(self):
-        rentals = self._services.rentals.get_all()
+    async def _refresh_history(self):
+        """Refresh the rental history list."""
+        rentals = await self._services.rentals.get_all()
         self._history_list.controls = [self._build_history_row(r) for r in rentals]
 
     def _build_history_row(self, rental: Rental) -> ft.Container:
+        """Build a row widget for a rental history entry."""
         status = "Returned" if rental.returned_at else "Active"
         return ft.Container(
             content=ft.Row([
@@ -99,9 +116,10 @@ class RentalsView(BaseView):
             border=ft.border.all(1, ft.Colors.OUTLINE_VARIANT),
         )
 
-    def _open_rent(self):
-        available = self._services.books.get_available()
-        clients = self._services.clients.get_all()
+    async def _open_rent(self):
+        """Open the rent-out dialog."""
+        available = await self._services.books.get_available()
+        clients = await self._services.clients.get_all()
         if not available:
             self._page.open(ft.SnackBar(ft.Text("No available books to rent"), open=True))
             return
@@ -120,27 +138,28 @@ class RentalsView(BaseView):
         due_f = ft.TextField(label="Due date (YYYY-MM-DD)",
                              value=(date.today() + timedelta(days=14)).isoformat(), width=400)
 
-        def save():
+        async def save():
             if not book_dd.value or not client_dd.value:
                 return False
-            self._services.rentals.rent_book(int(book_dd.value), int(client_dd.value), due_f.value)
-            self.refresh()
+            await self._services.rentals.rent_book(int(book_dd.value), int(client_dd.value), due_f.value)
+            await self.refresh()
             return True
 
         FormDialog(self._page, "Rent Out Book", [book_dd, client_dd, due_f], save).show()
 
-    def _open_return(self, rental: Rental):
-        storages = self._services.storages.get_all()
+    async def _open_return(self, rental: Rental):
+        """Open the return-book dialog."""
+        storages = await self._services.storages.get_all()
         storage_dd = ft.Dropdown(
             label="Return to storage", width=400,
             options=[ft.dropdown.Option(key=str(s.id), text=s.name) for s in storages],
         )
 
-        def save():
+        async def save():
             if not storage_dd.value:
                 return False
-            self._services.rentals.return_book(rental.id, int(storage_dd.value))
-            self.refresh()
+            await self._services.rentals.return_book(rental.id, int(storage_dd.value))
+            await self.refresh()
             return True
 
         FormDialog(self._page, f"Return: {rental.book.title}", [

@@ -10,6 +10,7 @@ from services.client_service import ClientService
 from services.storage_service import StorageService
 from services.rental_service import RentalService
 from services.dashboard_service import DashboardService
+from services.settings_service import SettingsService
 
 
 class ServiceContainer:
@@ -43,6 +44,7 @@ class ServiceContainer:
         self.storages = StorageService(self.storage_repo)
         self.rentals = RentalService(self.rental_repo, self.book_repo)
         self.dashboard = DashboardService(self._db)
+        self.settings = SettingsService()
 
     async def init(self):
         """Initialize the database schema. Must be called after construction."""

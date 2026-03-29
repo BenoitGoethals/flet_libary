@@ -1,3 +1,5 @@
+"""Async books view for managing the book catalog."""
+
 import flet as ft
 from views.base_view import BaseView
 from components.entity_card import EntityCard, StatusBadge
@@ -7,13 +9,21 @@ from models.entities import Book
 
 
 class BooksView(BaseView):
+    """View for searching, adding, editing, and deleting books."""
+
     def __init__(self, page: ft.Page, container: ServiceContainer):
         super().__init__(page, container)
-        self._search = ft.TextField(label="Search books...", expand=True, on_submit=lambda e: self.refresh())
+        self._search = ft.TextField(label="Search books...", expand=True,
+                                    on_submit=lambda e: self.refresh())
         self._list = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=5)
 
-    def build(self) -> ft.Control:
-        self.refresh()
+    async def build(self) -> ft.Control:
+        """Build the books view layout.
+
+        Returns:
+            A Column containing the search bar, add button, and book list.
+        """
+        await self.refresh()
         return ft.Column([
             ft.Row([
                 ft.Text("Books", size=28, weight=ft.FontWeight.BOLD),
@@ -23,12 +33,14 @@ class BooksView(BaseView):
             self._list,
         ], spacing=15, expand=True)
 
-    def refresh(self) -> None:
-        books = self._services.books.search(self._search.value or "")
+    async def refresh(self, e=None) -> None:
+        """Refresh the book list from the database."""
+        books = await self._services.books.search(self._search.value or "")
         self._list.controls = [self._build_card(b) for b in books]
         self._page.update()
 
     def _build_card(self, book: Book) -> EntityCard:
+        """Build a card widget for a single book."""
         status_color = ft.Colors.GREEN if book.is_available else ft.Colors.ORANGE
         content = ft.Column([
             ft.Text(book.title, weight=ft.FontWeight.BOLD, size=16),
@@ -47,8 +59,9 @@ class BooksView(BaseView):
             on_delete=lambda e, b=book: self._confirm_delete(b),
         )
 
-    def _open_form(self, book: Book | None = None):
-        storages = self._services.storages.get_all()
+    async def _open_form(self, book: Book | None = None):
+        """Open the add/edit book dialog."""
+        storages = await self._services.storages.get_all()
         options = [ft.dropdown.Option(key="", text="None")] + [
             ft.dropdown.Option(key=str(s.id), text=s.name) for s in storages
         ]
@@ -59,25 +72,26 @@ class BooksView(BaseView):
         storage_f = ft.Dropdown(label="Storage", options=options,
                                 value=str(book.storage_id) if book and book.storage_id else "")
 
-        def save():
+        async def save():
             if not title_f.value.strip():
                 title_f.error_text = "Required"
                 self._page.update()
                 return False
             sid = int(storage_f.value) if storage_f.value else None
             if book:
-                self._services.books.update(book.id, title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
+                await self._services.books.update(book.id, title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
             else:
-                self._services.books.create(title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
-            self.refresh()
+                await self._services.books.create(title_f.value, author_f.value, isbn_f.value, genre_f.value, sid)
+            await self.refresh()
             return True
 
         FormDialog(self._page, "Edit Book" if book else "Add Book",
                    [title_f, author_f, isbn_f, genre_f, storage_f], save).show()
 
-    def _confirm_delete(self, book: Book):
-        def do_delete():
-            self._services.books.delete(book.id)
-            self.refresh()
+    async def _confirm_delete(self, book: Book):
+        """Open the delete confirmation dialog."""
+        async def do_delete():
+            await self._services.books.delete(book.id)
+            await self.refresh()
 
         ConfirmDialog(self._page, "Delete Book", f'Delete "{book.title}"?', do_delete).show()

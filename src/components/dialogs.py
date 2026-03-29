@@ -1,20 +1,22 @@
-"""Reusable dialog components for forms and confirmation prompts."""
+"""Reusable async dialog components for forms and confirmation prompts."""
 
+import asyncio
 import flet as ft
-from typing import Callable
+from typing import Callable, Awaitable
 
 
 class FormDialog:
-    """Base class for entity form dialogs."""
+    """Dialog for entity forms with async save callback."""
 
-    def __init__(self, page: ft.Page, title: str, fields: list[ft.Control], on_save: Callable):
+    def __init__(self, page: ft.Page, title: str, fields: list[ft.Control],
+                 on_save: Callable[[], Awaitable[bool]]):
         """Initialize the form dialog.
 
         Args:
             page: The Flet page to attach the dialog to.
             title: Dialog title text.
             fields: List of form field controls to display.
-            on_save: Callback invoked on save. Should return True to close the dialog.
+            on_save: Async callback invoked on save. Should return True to close.
         """
         self._page = page
         self._on_save = on_save
@@ -27,13 +29,13 @@ class FormDialog:
             ],
         )
 
-    def _save(self, e):
+    async def _save(self, e):
         """Handle the save button click event.
 
         Args:
             e: The click event.
         """
-        if self._on_save():
+        if await self._on_save():
             self.close()
 
     def _close(self, e=None):
@@ -57,16 +59,17 @@ class FormDialog:
 
 
 class ConfirmDialog:
-    """A confirmation dialog with cancel and delete action buttons."""
+    """A confirmation dialog with async confirm callback."""
 
-    def __init__(self, page: ft.Page, title: str, message: str, on_confirm: Callable):
+    def __init__(self, page: ft.Page, title: str, message: str,
+                 on_confirm: Callable[[], Awaitable[None]]):
         """Initialize the confirmation dialog.
 
         Args:
             page: The Flet page to attach the dialog to.
             title: Dialog title text.
             message: Confirmation message to display.
-            on_confirm: Callback invoked when the user confirms the action.
+            on_confirm: Async callback invoked when the user confirms.
         """
         self._page = page
         self._dialog = ft.AlertDialog(
@@ -74,14 +77,15 @@ class ConfirmDialog:
             content=ft.Text(message),
             actions=[
                 ft.TextButton("Cancel", on_click=lambda e: self.close()),
-                ft.ElevatedButton("Delete", on_click=lambda e: self._confirm(), color=ft.Colors.RED),
+                ft.ElevatedButton("Delete", on_click=lambda e: asyncio.ensure_future(self._confirm()),
+                                  color=ft.Colors.RED),
             ],
         )
         self._on_confirm = on_confirm
 
-    def _confirm(self):
-        """Execute the confirmation callback and close the dialog."""
-        self._on_confirm()
+    async def _confirm(self):
+        """Execute the async confirmation callback and close the dialog."""
+        await self._on_confirm()
         self.close()
 
     def close(self):

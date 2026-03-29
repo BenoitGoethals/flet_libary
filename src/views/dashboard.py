@@ -8,8 +8,9 @@ from services.container import ServiceContainer
 
 class DashboardView(BaseView):
     """Displays aggregate library statistics and a table of active rentals."""
+
     def __init__(self, page: ft.Page, container: ServiceContainer):
-        """Initialize the dashboard view with stat card rows and rentals table.
+        """Initialize the dashboard view.
 
         Args:
             page: The Flet page instance.
@@ -29,13 +30,13 @@ class DashboardView(BaseView):
             rows=[],
         )
 
-    def build(self) -> ft.Control:
+    async def build(self) -> ft.Control:
         """Build the dashboard layout with stat cards and active rentals table.
 
         Returns:
             A scrollable Column containing the dashboard UI.
         """
-        self.refresh()
+        await self.refresh()
         return ft.Column(
             [
                 ft.Row(
@@ -59,9 +60,9 @@ class DashboardView(BaseView):
             expand=True,
         )
 
-    def refresh(self) -> None:
+    async def refresh(self, e=None) -> None:
         """Refresh dashboard statistics and the active rentals table."""
-        stats = self._services.dashboard.get_stats()
+        stats = await self._services.dashboard.get_stats()
         self._cards_row1.controls = [
             StatCard("Total Books", stats.total_books, ft.Icons.MENU_BOOK, ft.Colors.BLUE),
             StatCard("Available", stats.available, ft.Icons.CHECK_CIRCLE, ft.Colors.GREEN),
@@ -73,7 +74,7 @@ class DashboardView(BaseView):
             StatCard("Overdue", stats.overdue, ft.Icons.WARNING, ft.Colors.RED),
         ]
 
-        rentals = self._services.rentals.get_active()
+        rentals = await self._services.rentals.get_active()
         self._rentals_table.rows = [
             ft.DataRow(cells=[
                 ft.DataCell(ft.Text(r.book.title)),
