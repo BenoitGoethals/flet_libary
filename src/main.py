@@ -80,7 +80,7 @@ class LibraryApp:
                     ft.IconButton(ft.Icons.LOGOUT, tooltip="Logout",
                                   on_click=self._logout, icon_size=20),
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=2),
-                padding=ft.padding.only(bottom=10),
+                padding=ft.Padding(bottom=10),
             ),
         )
         self._page.controls.clear()
