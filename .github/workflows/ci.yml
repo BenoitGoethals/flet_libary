@@ -61,6 +61,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
 
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
       - name: Build Flet app (web)
         working-directory: src
-        run: uv run flet build web
+        run: yes | uv run flet build web
