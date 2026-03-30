@@ -11,6 +11,24 @@ class Base(DeclarativeBase):
     pass
 
 
+class AppUser(Base):
+    """Represents an application user with role-based access."""
+
+    __tablename__ = "app_users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    display_name: Mapped[str] = mapped_column(String, default="")
+    email: Mapped[Optional[str]] = mapped_column(String, default="")
+    role: Mapped[str] = mapped_column(String, default="user")  # "admin" or "user"
+    created_at: Mapped[Optional[str]] = mapped_column(String, server_default=func.now())
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == "admin"
+
+
 class Storage(Base):
     """Represents a physical storage location where books are kept.
 
@@ -121,7 +139,6 @@ class Client(Base):
         name: Full name of the client.
         email: Email address.
         phone: Phone number.
-        address: Physical address.
         created_at: Timestamp of when the client was registered.
         rentals: Relationship to all Rental records for this client.
     """
@@ -132,7 +149,6 @@ class Client(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[Optional[str]] = mapped_column(String, default="")
     phone: Mapped[Optional[str]] = mapped_column(String, default="")
-    address: Mapped[Optional[str]] = mapped_column(String, default="")
     photo_path: Mapped[Optional[str]] = mapped_column(String, default="")
     created_at: Mapped[Optional[str]] = mapped_column(String, server_default=func.now())
 

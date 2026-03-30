@@ -60,7 +60,7 @@ class ClientRepository(BaseRepository[Client]):
                 client.name = entity.name
                 client.email = entity.email
                 client.phone = entity.phone
-                client.address = entity.address
+
                 client.photo_path = entity.photo_path
                 await session.commit()
 

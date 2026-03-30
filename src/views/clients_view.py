@@ -61,7 +61,6 @@ class ClientsView(BaseView):
                     ft.Text(client.phone or "", size=12, color=ft.Colors.GREY_500),
                 ], spacing=15),
                 ft.Row([
-                    ft.Text(client.address or "", size=12, color=ft.Colors.GREY_500) if client.address else ft.Container(),
                     StatusBadge(f"{n} active rental{'s' if n != 1 else ''}", ft.Colors.TEAL if n else ft.Colors.GREY_400),
                 ], spacing=10),
             ], expand=True, spacing=3),
@@ -78,7 +77,6 @@ class ClientsView(BaseView):
         name_f = ft.TextField(label="Name", value=client.name if client else "")
         email_f = ft.TextField(label="Email", value=client.email if client else "")
         phone_f = ft.TextField(label="Phone", value=client.phone if client else "")
-        address_f = ft.TextField(label="Address", value=client.address if client else "")
 
         # Photo picker
         photo_path = client.photo_path if client else ""
@@ -107,14 +105,14 @@ class ClientsView(BaseView):
                 self._page.update()
                 return False
             if client:
-                await self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, address_f.value, photo_path)
+                await self._services.clients.update(client.id, name_f.value, email_f.value, phone_f.value, photo_path)
             else:
-                await self._services.clients.create(name_f.value, email_f.value, phone_f.value, address_f.value, photo_path)
+                await self._services.clients.create(name_f.value, email_f.value, phone_f.value, photo_path)
             await self.refresh()
             return True
 
         FormDialog(self._page, "Edit Client" if client else "Add Client",
-                   [name_f, email_f, phone_f, address_f, photo_row], save).show()
+                   [name_f, email_f, phone_f, photo_row], save).show()
 
     async def _confirm_delete(self, client: Client):
         """Open the delete confirmation dialog."""

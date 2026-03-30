@@ -14,6 +14,14 @@ import yaml
 SETTINGS_PATH: str = os.path.join(os.path.dirname(__file__), "settings.yml")
 
 _DEFAULT_SETTINGS: dict = {
+    "mail": {
+        "host": "",
+        "port": 587,
+        "username": "",
+        "password": "",
+        "from_address": "",
+        "use_tls": True,
+    },
     "database": {
         "type": "sqlite",
         "sqlite": {
