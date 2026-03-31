@@ -1,7 +1,8 @@
 site_name: Library Manager Documentation
+site_url: https://benoitgoethals.github.io/flet_libary/
 site_description: Documentation for the Flet Library Manager application
-repo_url: https://github.com/BenoitGoethals/flet-tests
-repo_name: BenoitGoethals/flet-tests
+repo_url: https://github.com/BenoitGoethals/flet_libary
+repo_name: BenoitGoethals/flet_libary
 
 theme:
   name: material
