@@ -1,0 +1,3 @@
+# Dashboard View
+
+::: views.dashboard
