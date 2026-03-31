@@ -21,6 +21,10 @@ dev = [
     "flet-cli>=0.83.0",
     "flet-desktop>=0.83.0",
     "flet-web>=0.83.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings>=1.0.3",
+    "mkdocstrings-python>=2.0.3",
 ]
 
 [tool.flet]
