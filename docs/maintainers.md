@@ -43,7 +43,7 @@ We welcome contributions from the community! Here's how you can help:
 
 - **Issues**: [GitHub Issues](https://github.com/BenoitGoethals/flet_libary/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/BenoitGoethals/flet_libary/discussions)
-- **Email**: you@example.com (replace with actual contact from pyproject.toml)
+- **Email**: you@example.com
 
 ## License
 
@@ -59,4 +59,4 @@ Built with:
 
 ---
 
-*Last updated: 2026-03-31*
+*Last updated: 2026*

@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: Library Manager Documentation
 site_url: https://benoitgoethals.github.io/flet_libary/
 site_description: Documentation for the Flet Library Manager application
@@ -37,6 +38,7 @@ theme:
 
 plugins:
   - search
+  - blog
   - mkdocstrings:
       handlers:
         python:
