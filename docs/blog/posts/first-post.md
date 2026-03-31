@@ -1,7 +1,7 @@
 ---
 date: 2026-03-31
 authors:
-  - benoitgoethals
+  - Benoit Goethals
 categories:
   - Announcement
   - Getting Started
