@@ -102,3 +102,5 @@ nav:
           - Type Selector: api/components/type_selector.md
           - Database Sections: api/components/database_sections.md
       - Configuration: api/config.md
+
+  - About: about.md

@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="uv (flet_tests)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="uv (flet_tests)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="uv (flet_libary)" project-jdk-type="Python SDK" />
 </project>
