@@ -26,7 +26,11 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.indexes
+    - navigation.sidebar
+    - toc.integrate
     - search.suggest
+    - search.highlight
     - content.code.copy
   icon:
     repo: fontawesome/brands/github
@@ -104,3 +108,4 @@ nav:
       - Configuration: api/config.md
 
   - About: about.md
+  - Maintainers: maintainers.md
