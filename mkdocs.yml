@@ -1,0 +1,103 @@
+site_name: Library Manager Documentation
+site_description: Documentation for the Flet Library Manager application
+repo_url: https://github.com/BenoitGoethals/flet-tests
+repo_name: BenoitGoethals/flet-tests
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            docstring_style: google
+            show_bases: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Project Structure: architecture/structure.md
+  - API Reference:
+      - Models:
+          - Entities: api/models/entities.md
+          - Database: api/models/database.md
+      - Repositories:
+          - Base Repository: api/repositories/base.md
+          - Book Repository: api/repositories/book_repository.md
+          - Client Repository: api/repositories/client_repository.md
+          - Rental Repository: api/repositories/rental_repository.md
+          - Storage Repository: api/repositories/storage_repository.md
+          - User Repository: api/repositories/user_repository.md
+      - Services:
+          - Container: api/services/container.md
+          - Book Service: api/services/book_service.md
+          - Client Service: api/services/client_service.md
+          - Rental Service: api/services/rental_service.md
+          - Storage Service: api/services/storage_service.md
+          - Dashboard Service: api/services/dashboard_service.md
+          - User Service: api/services/user_service.md
+          - Mail Service: api/services/mail_service.md
+          - Settings Service: api/services/settings_service.md
+      - Views:
+          - Base View: api/views/base_view.md
+          - Dashboard: api/views/dashboard.md
+          - Books View: api/views/books_view.md
+          - Clients View: api/views/clients_view.md
+          - Rentals View: api/views/rentals_view.md
+          - Storages View: api/views/storages_view.md
+          - Users View: api/views/users_view.md
+          - Settings View: api/views/settings_view.md
+          - Login View: api/views/login_view.md
+      - Components:
+          - Entity Card: api/components/entity_card.md
+          - Stat Card: api/components/stat_card.md
+          - Dialogs: api/components/dialogs.md
+          - Type Selector: api/components/type_selector.md
+          - Database Sections: api/components/database_sections.md
+      - Configuration: api/config.md
